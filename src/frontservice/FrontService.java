@@ -2,6 +2,9 @@ package frontservice;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,12 +15,41 @@ import java.util.logging.Logger;
 public class FrontService extends Thread{
     
     String query;
-    static String ipIndex="localhost";
-    static String ipCaching="localhost";
+    static String ipIndexService="localhost";
+    static String ipCachingService="localhost";
 
     private FrontService(String query) {
         this.query = query;
     }
+    
+        // Se agregan las stopwords desde el archivo al programa
+    public static ArrayList<String> ingresarStopwords() throws IOException{
+        ArrayList<String> stopwords = new ArrayList<String>();
+        File archivo = new File ("stopwords.txt");
+        FileReader fr = new FileReader (archivo);
+        BufferedReader br = new BufferedReader(fr);
+        String linea;
+        while((linea=br.readLine())!=null){
+            linea=linea.replace('á', 'a');
+            linea=linea.replace('é', 'e');
+            linea=linea.replace('í', 'i');
+            linea=linea.replace('ó', 'o');
+            linea=linea.replace('ú', 'u');
+            stopwords.add(linea);
+        }
+        fr.close();   
+        return stopwords;
+    }
+    
+    // Se eliminan las stopwords de un string
+    public static String eliminarStopwords(String palabra, ArrayList<String> stopwords){
+        System.out.println("Acaaaa");
+        for (int i = 0; i < stopwords.size(); i++) {
+            palabra = palabra.replaceAll(" "+stopwords.get(i)+" ", " ");
+        }
+        return palabra;
+    }
+    
         
     // Para recibir desde el CachingService
     
@@ -74,7 +106,7 @@ public class FrontService extends Thread{
         socketDesdeIndexService.close();
         if(desdeIndexService.equals("MISS!!")){
             System.out.println("(Front Service) Palabra no encontrada en Index Service");
-            System.out.println("(Front Service) No se han encontrado resultados");
+            System.out.println("(Front Service) No se han encontrado resultados con la combinación de palabras ingresada");
         }
         else{
             String[] tokens = desdeIndexService.split(",");
@@ -92,7 +124,7 @@ public class FrontService extends Thread{
     
     public static void socketClienteDesdeFrontServiceHaciaCachingService(String query) throws Exception{        
         //Socket para el cliente (host, puerto)
-        Socket socketHaciaCachingService = new Socket(ipCaching, 5001); //ipCachingService
+        Socket socketHaciaCachingService = new Socket(ipCachingService, 5001); //ipCachingService
         
         //Buffer para enviar el dato al server
         DataOutputStream haciaCachingService = new DataOutputStream(socketHaciaCachingService.getOutputStream());
@@ -106,7 +138,7 @@ public class FrontService extends Thread{
     
     public static void socketClienteDesdeFrontServiceHaciaIndexService(String query) throws Exception{        
         //Socket para el cliente (host, puerto)
-        Socket socketHaciaIndexService = new Socket(ipIndex, 5003); //ipCachingService
+        Socket socketHaciaIndexService = new Socket(ipIndexService, 5003); //ipCachingService
         
         //Buffer para enviar el dato al server
         DataOutputStream haciaIndexService = new DataOutputStream(socketHaciaIndexService.getOutputStream());
@@ -162,9 +194,12 @@ public class FrontService extends Thread{
 
     public static void main(String[] args) throws Exception {
         while(true){
+          ArrayList<String> stopwordsList = ingresarStopwords();
           String query;
           BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
           query = inFromUser.readLine();
+          System.out.println("Eliminando stopwords");
+          query = eliminarStopwords(query, stopwordsList);
           FrontService hilo = new FrontService(query);
           hilo.start();
         }
