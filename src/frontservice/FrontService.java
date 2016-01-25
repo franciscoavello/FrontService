@@ -12,8 +12,8 @@ import java.util.logging.Logger;
 public class FrontService extends Thread{
     
     String query;
-    static String ipIndex="192.168.31.159";
-    static String ipCaching="192.168.31.115";
+    static String ipIndex="localhost";
+    static String ipCaching="localhost";
 
     private FrontService(String query) {
         this.query = query;
