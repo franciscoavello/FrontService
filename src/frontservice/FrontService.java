@@ -13,7 +13,7 @@ public class FrontService extends Thread{
     
     String query;
     static String ipIndex="192.168.31.159";
-    static String ipCaching="192.168.31.159";
+    static String ipCaching="192.168.31.115";
 
     private FrontService(String query) {
         this.query = query;
